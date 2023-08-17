@@ -1,4 +1,8 @@
 # Databricks notebook source
+# MAGIC %md This notebook is available at https://github.com/databricks-industry-solutions/graph-analytics-churn-prediction.
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Engineering graph features
 # MAGIC
@@ -9,6 +13,7 @@
 from graphframes import *
 from math import comb
 import pyspark.sql.functions as F
+from pyspark.sql.types import FloatType
 from warnings import filterwarnings
 filterwarnings('ignore', 'DataFrame.sql_ctx is an internal property')
 
@@ -45,7 +50,7 @@ graph_features_df = vertex_df.alias('customer').join(degree_df, degree_df.id == 
                              .withColumnRenamed('id','customer_id')\
                              .fillna(0, "degree")
           
-display(graph_features_df.orderBy(col("degree").desc()))
+display(graph_features_df.orderBy(F.col("degree").desc()))
 
 # COMMAND ----------
 
@@ -57,7 +62,7 @@ graph_features_df = graph_features_df.alias('features').join(indegree_df, indegr
                  .select('features.*', 'inDegree')\
                  .fillna(0, "inDegree")\
                  .withColumnRenamed("inDegree","in_degree")
-display(graph_features_df.orderBy(col("inDegree").desc()))
+display(graph_features_df.orderBy(F.col("inDegree").desc()))
 
 # COMMAND ----------
 
@@ -69,7 +74,7 @@ graph_features_df = graph_features_df.alias('features').join(outdegree_df, outde
                  .select('features.*', 'outDegree')\
                  .fillna(0, "outDegree")\
                  .withColumnRenamed("outDegree","out_degree")
-display(graph_features_df.orderBy(col("outDegree").desc()))
+display(graph_features_df.orderBy(F.col("outDegree").desc()))
 
 # COMMAND ----------
 
@@ -84,8 +89,8 @@ def degreeRatio(x, d):
   
 degreeRatioUDF = udf(degreeRatio, FloatType())   
 
-graph_features_df = graph_features_df.withColumn("in_degree_ratio", degreeRatioUDF(col("in_degree"), col("degree")))
-graph_features_df = graph_features_df.withColumn("out_degree_ratio", degreeRatioUDF(col("out_degree"), col("degree")))
+graph_features_df = graph_features_df.withColumn("in_degree_ratio", degreeRatioUDF(F.col("in_degree"), F.col("degree")))
+graph_features_df = graph_features_df.withColumn("out_degree_ratio", degreeRatioUDF(F.col("out_degree"), F.col("degree")))
 display(graph_features_df)
 
 # COMMAND ----------
@@ -130,7 +135,7 @@ graph_features_df = graph_features_df.alias('features').join(trian_count.select(
                  .select('features.*', 'count')\
                  .withColumnRenamed("count","trian_count")
 
-display(graph_features_df.orderBy(col("trian_count").desc()))
+display(graph_features_df.orderBy(F.col("trian_count").desc()))
 
 # COMMAND ----------
 
@@ -158,9 +163,9 @@ def clusterCoefficient(t, e):
   
 clusterCoefficientUDF = udf(clusterCoefficient, FloatType())   
 
-graph_features_df = graph_features_df.withColumn("cc", clusterCoefficientUDF(col("trian_count"), col("degree")))
+graph_features_df = graph_features_df.withColumn("cc", clusterCoefficientUDF(F.col("trian_count"), F.col("degree")))
 graph_features_df = graph_features_df.fillna(0)
-display(graph_features_df.orderBy(col("degree").desc()))
+display(graph_features_df.orderBy(F.col("degree").desc()))
 
 # COMMAND ----------
 
@@ -252,9 +257,10 @@ try:
   fs.drop_table(f"{catalog}.{db_name}.telco_churn_graph_features")
 except:
   pass
+
 #Note: You might need to delete the FS table using the UI
 graph_feature_table = fs.create_table(
-  name=f'{dbName}.telco_churn_graph_features',
+  name=f'{db_name}.telco_churn_graph_features',
   primary_keys='customer_id',
   schema=graph_features_df.schema,
   description='These features are derived from the telco customer call network.'
@@ -267,7 +273,7 @@ fs.write_table(df=graph_features_df, name=f"{catalog}.{db_name}.telco_churn_grap
 # MAGIC %md 
 # MAGIC ### Using Databricks AutoML to build our model
 # MAGIC
-# MAGIC Next step: [Churn preiction model using AutoML]($./05_automl_churn_prediction)
+# MAGIC Next step: [Churn preiction model using AutoML]($./04_AutoML_churn_prediction)
 
 # COMMAND ----------
 

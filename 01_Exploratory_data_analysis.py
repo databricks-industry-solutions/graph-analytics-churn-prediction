@@ -1,4 +1,8 @@
 # Databricks notebook source
+# MAGIC %md This notebook is available at https://github.com/databricks-industry-solutions/graph-analytics-churn-prediction.
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC # Exploratory Data Analysis
 
@@ -9,6 +13,10 @@ from graphframes import *
 from pyspark.sql.types import DoubleType
 import pyspark.sql.functions as F
 import networkx as nx
+import requests
+import pandas as pd
+from io import StringIO
+import re
 
 # COMMAND ----------
 
@@ -40,7 +48,7 @@ def cleanup_column(pdf):
   
 cust_df = cleanup_column(cust_df)
 
-mobile_csv = requests.get("https://raw.githubusercontent.com/nuwan-db/Graph_Analytics_Telco_Churn_Prediction/dev/_resources/data/telco_customer_mobile.csv").text
+mobile_csv = requests.get("https://raw.githubusercontent.com/databricks-industry-solutions/graph-analytics-churn-prediction/main/data/telco_customer_mobile.csv").text 
 mobile_df = pd.read_csv(StringIO(mobile_csv), sep=",")
 
 df = cust_df.merge(mobile_df, on='customer_id', how='left')
@@ -53,7 +61,7 @@ spark.createDataFrame(df).write.mode("overwrite").option("overwriteSchema", "tru
 
 # COMMAND ----------
 
-call_csv = requests.get("https://raw.githubusercontent.com/nuwan-db/Graph_Analytics_Telco_Churn_Prediction/dev/_resources/data/telco_call_log.csv").text
+call_csv = requests.get("https://raw.githubusercontent.com/databricks-industry-solutions/graph-analytics-churn-prediction/main/data/telco_call_log.csv").text
 call_df = pd.read_csv(StringIO(call_csv), sep=",")
 call_df = call_df[['datatime', 'caller_mobile_number', 'callee_mobile_number', 'duration']]
 spark.createDataFrame(call_df).write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(f"{catalog}.{db_name}.telco_call_log_bronze")

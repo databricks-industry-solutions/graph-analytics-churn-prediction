@@ -1,4 +1,8 @@
 # Databricks notebook source
+# MAGIC %md This notebook is available at https://github.com/databricks-industry-solutions/graph-analytics-churn-prediction.
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Engineering customer features
 # MAGIC
@@ -8,6 +12,7 @@
 
 from graphframes import *
 from math import comb
+import re
 
 # COMMAND ----------
 
