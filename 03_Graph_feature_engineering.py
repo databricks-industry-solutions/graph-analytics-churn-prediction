@@ -260,7 +260,7 @@ except:
 
 #Note: You might need to delete the FS table using the UI
 graph_feature_table = fs.create_table(
-  name=f'{db_name}.telco_churn_graph_features',
+  name=f'{catalog}.{db_name}.telco_churn_graph_features',
   primary_keys='customer_id',
   schema=graph_features_df.schema,
   description='These features are derived from the telco customer call network.'
